@@ -1,5 +1,24 @@
 # Assembly
 
+## Registros
+
+| Registro                                          | Número | Uso  | ¿Preservado? |
+| :-----------------------------------------------: | :----: | :--: | :----------: |
+| **$zero**     |    0     |   Constante con valor 0    |       No aplicable       |
+| **$at**         | 1 | Reservado para el ensamblador | No |
+| **$v0** - **$v1** | 2 - 3 | Valores devueltos en funciones y evaluación de funciones | No |
+| **$a0** - **$a3** | 4 - 7 |             Paso de argumentos en funciones              | No |
+| **$t0** - **$t7**            | 8 - 15 | Registros temporales | No |
+| **$s0** - **$s7** | 16 - 23 | Registros que deben preservarse | Sí |
+| **$t8** - **$t9**           | 24 - 25 | Registros temporales | No |
+| **$k0** - **$k1** | 26 - 27 | Reservado para OS | No |
+| **$gp**                      | 28 | Puntero global | Sí |
+| **$sp**                     | 29 | Puntero de pila | Sí |
+| **$fp**                    | 30 | Puntero de bloque de activación | Sí |
+| **$ra**                | 31 | Dirección de retorno | Sí |
+
+
+
 ## Tipos de instrucciones de MIPS
 
 La longitud de todas las instrucciones es de 32 bits.  
@@ -52,6 +71,7 @@ Ejemplos
 | lui | ```lui $1, cte``` | Carga el valor **constante** en los 16 bits superiores del registro **$1** |
 | lw | ```lw $1, desplazamiento($2)``` | Carga en el registro **$1** la palabra almacenada en la dirección de memoria que contiene el registro **$2** más el desplazamiento. La nueva posición debe ser un múltiplo de 4 |
 | lb | ``` lb $1, desplazamiento($2) ``` | Carga en el registro **$1** el byte de memoria apuntado por la dirección almacenada en el registro **$2** más el desplazamiento |
+| la | ```la $1, direccion``` | Carga en el registro **$1** la dirección (address) de memoria etiquetada con **direccion**. |
 | sw | ```sw $1, desplazamiento($2)``` | Almacena en memoria en la posición obtenida de sumarle el desplazamiento a la dirección del registro **$2**, la palabra del registro **$1**. La nueva dirección debe ser un múltiplo de 4. |
 | sb | ```sb $1, desplazamiento($2)``` | Almacena en la posición de memoria correspondiente al valor de **$2** más el desplazamiento, el primer byte de la palabra almacenada en **$1**. |
 | beq | ```beq $1, $1, etiqueta``` | Si los valores de **$1** y **$2** son iguales, se modifica el valor del PC para pasar a ejecutar el trozo de código en el que está la etiqueta. |
@@ -69,4 +89,56 @@ Las instrucciones de tipo J, son utilizadas para realizar saltos incondicionales
 | ----------- | ------------------ | ------------------------------------------------------------ |
 | j           | ```j etiqueta```   | Modifica el valor de PC para ejecutar la siguiente instrucción a la etiqueta |
 | jal         | ```jal etiqueta``` | Modifica el valor del PC por aquel al que apunta la etiqueta y almacena la dirección actual del PC en $ra |
+
+----
+
+## Códigos de ejemplo
+
+Para comenzar a escribir código en ensamblador, hay que escribir una **cabecera obligatoria** para cada programa.  
+
+```assembly
+.text
+.globl main
+
+:main
+# Codigo del programa
+```
+
+También podemos reservar espacio en memoria para unos determinador valores de números, caracteres o incluso cadenas de texto 
+
+```assembly
+.data								# Reservamos espacio en memoria
+arrayNumeros: .word 2, 9, 8, 3, 4  	   # Bajo el nombre de la etiqueta, estaremos guardando 5 numeros
+variableX: .word 10					 # Tambien podemos utilizarlo para valores unicos
+cadena: .ascii "Esto es una cadena"   # Con .asciiz guaradamos una cadena de texto
+espacio: .space 150 				 # Con .space estaremos reservando 150 bytes de memoria para despues ocuparla con lo que deseemos
+```
+
+Con todo esto podemos hacer un pequeño programa que sume dos enteros como el 10 y el 7.  
+
+```assembly
+.data
+variableX: .word 10 	# Almacenamos en memoria el número 10
+variableY: .word 7 	# Y hacemos lo mismo con el número 7
+
+.text 	# Ponemos las líneas obligatorias de inicio de programa
+.globl main 
+
+main:
+
+la $a0, variableX 	# En carga en $a0 el valor del array de variableX 
+la $a1, variableY 	# Hacemos lo mismo con variableY
+
+lw $t0, 0($a0) 	# Cargamos en el registro del valor del primer elemento guardado en $a0, que es el numero 10
+lw $t1, 0($a1) 	# Hacems lo mismo con el $a1 solo que guardándolo en $t1
+
+add $a0, $t0, $t1 	# Sumamos $t0 y $t1, y lo almacenamos en $a0
+add $v0, $0, $a0	# Pasmos el valor de $a0 a $v0
+
+addi $v0, $0, 1 	# Y finalmente una suma inmediate de 1 y 0, almacenandose en $v0 para que con el
+syscall 	# syscall, se muestre por pantalla el valor de la suma de los enteros
+
+addi $v0, $0, 10
+syscall
+```
 
